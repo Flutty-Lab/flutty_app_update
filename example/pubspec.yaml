@@ -1,0 +1,19 @@
+name: flutty_app_update_example
+description: Example app for flutty_app_update.
+publish_to: none
+version: 1.0.0
+
+environment:
+  sdk: ">=3.13.0 <4.0.0"
+
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutty_app_update:
+    path: ../
+
+  material_ui: ^1.11.1
+
+flutter:
+  uses-material-design: true
