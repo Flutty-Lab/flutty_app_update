@@ -19,6 +19,7 @@ Extracted and generalized from a production app (Appels Pro).
 | `recommended_version` | Floor below which the banner shows. Empty = no banner. |
 | `update_url_android` | CTA link on Android. Empty = deduced from the package name. |
 | `update_url_ios` | CTA link on iOS — required, nothing can be deduced from the bundle id. Empty = no button. |
+| `update_url_windows` | CTA link on Windows (`AppStorePlatform.windows`) — required, an MSIX build has no deducible store page. Point it at a download page or a store.ms link. Empty = no button. |
 
 Parameter names are configurable via `AppUpdateConfigKeys`.
 

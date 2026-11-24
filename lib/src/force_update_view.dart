@@ -1,4 +1,4 @@
-import 'package:material_ui/material_ui.dart';
+import 'package:flutty_app_update/src/material.dart';
 
 /// Blocking content shown when the installed version is below the minimum
 /// required floor ([UpdateStatus.required]).

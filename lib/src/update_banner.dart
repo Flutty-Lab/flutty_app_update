@@ -1,5 +1,5 @@
 import 'package:flutty_app_update/src/app_update_service.dart';
-import 'package:material_ui/material_ui.dart';
+import 'package:flutty_app_update/src/material.dart';
 
 /// Dismissible banner shown while [UpdateStatus.recommended] applies.
 ///

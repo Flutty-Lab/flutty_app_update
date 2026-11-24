@@ -13,7 +13,6 @@ dependencies:
   flutty_app_update:
     path: ../
 
-  material_ui: ^1.11.1
 
 flutter:
   uses-material-design: true

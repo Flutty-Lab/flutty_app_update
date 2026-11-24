@@ -8,7 +8,7 @@ import 'package:flutty_app_update/src/update_status.dart';
 import 'package:flutter/foundation.dart';
 
 /// Which store the build targets — decides where the "Update" CTA points.
-enum AppStorePlatform { android, ios, other }
+enum AppStorePlatform { android, ios, windows, other }
 
 /// Opens a URL outside the app — inject the app's launcher (e.g.
 /// `url_launcher`'s `launchUrl`) so the package stays plugin-free.
@@ -192,6 +192,11 @@ class AppUpdateService {
         // No URL can be deduced from the bundle id (the numeric page id is
         // required): no parameter, no link.
         final url = config.getString(keys.updateUrlIos);
+        return url.isEmpty ? null : url;
+      case AppStorePlatform.windows:
+        // An MSIX build has no deducible store page: the link — a download
+        // page or a store.ms URL — must come from remote config.
+        final url = config.getString(keys.updateUrlWindows);
         return url.isEmpty ? null : url;
       case AppStorePlatform.other:
         return null;

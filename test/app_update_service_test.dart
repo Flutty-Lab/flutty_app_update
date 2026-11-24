@@ -245,6 +245,17 @@ void main() {
       expect(s.storeUrl, 'https://apps.apple.com/app/id42');
     });
 
+    test('windows needs the configured url — nothing is deduced', () async {
+      final s = service(platform: AppStorePlatform.windows);
+      await s.check();
+      expect(s.storeUrl, isNull);
+
+      config.values['update_url_windows'] =
+          'https://apps.microsoft.com/detail/42';
+      await s.refresh();
+      expect(s.storeUrl, 'https://apps.microsoft.com/detail/42');
+    });
+
     test('other platforms never get a store url', () async {
       final s = service();
       await s.check();

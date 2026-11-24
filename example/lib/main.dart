@@ -1,5 +1,6 @@
+// ignore_for_file: deprecated_member_use
 import 'package:flutty_app_update/flutty_app_update.dart';
-import 'package:material_ui/material_ui.dart';
+import 'package:flutter/material.dart';
 
 /// Demo of `flutty_app_update` with a compiled-in config: pick a scenario,
 /// the banner and the blocking page react like they would against a real
@@ -20,6 +21,7 @@ class _ExampleAppState extends State<ExampleApp> {
     'update_url_android':
         'https://play.google.com/store/apps/details?id=com.example.app',
     'update_url_ios': '',
+    'update_url_windows': '',
   };
 
   late final AppUpdateService _service = AppUpdateService(

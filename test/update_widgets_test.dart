@@ -1,6 +1,6 @@
 import 'package:flutty_app_update/flutty_app_update.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:material_ui/material_ui.dart';
+import 'package:flutty_app_update/src/material.dart';
 
 class _MemoryDismissalStore implements UpdateDismissalStore {
   _MemoryDismissalStore([this.stored]);
@@ -63,6 +63,40 @@ void main() {
     testWidgets('the screen cannot be popped', (tester) async {
       await tester.pumpWidget(view(onUpdate: () {}));
       expect(tester.widget<PopScope>(find.byType(PopScope)).canPop, isFalse);
+    });
+
+    testWidgets('text stays readable under a dark app theme', (tester) async {
+      // Consuming apps theme with Flutter's ThemeData — the view must read
+      // it. With a different Theme implementation (e.g. material_ui's) the
+      // lookup falls back to a light theme and paints dark text on the
+      // app's dark surface.
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData.light(),
+          darkTheme: ThemeData.dark(),
+          themeMode: ThemeMode.dark,
+          home: const Scaffold(
+            body: ForceUpdateView(
+              title: 'Update required',
+              message: 'This version is no longer supported.',
+            ),
+          ),
+        ),
+      );
+
+      for (final content in [
+        'Update required',
+        'This version is no longer supported.',
+      ]) {
+        final context = tester.element(find.text(content));
+        final resolved = DefaultTextStyle.of(context).style
+            .merge(tester.widget<Text>(find.text(content)).style);
+        expect(
+          resolved.color!.computeLuminance(),
+          greaterThan(0.5),
+          reason: '"$content" must be a light color on a dark theme',
+        );
+      }
     });
   });
 

@@ -1,6 +1,6 @@
 name: flutty_app_update
 description: "Forced and recommended app updates driven by remote config: a blocking page below a minimum version, a dismissible banner below a recommended version."
-version: 0.1.0
+version: 0.2.0
 homepage: https://github.com/Flutty-Lab/flutty_app_update
 repository: https://github.com/Flutty-Lab/flutty_app_update
 issue_tracker: https://github.com/Flutty-Lab/flutty_app_update/issues
@@ -19,7 +19,6 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  material_ui: ^1.11.1
   shared_preferences: ^2.5.4
 
 dev_dependencies:

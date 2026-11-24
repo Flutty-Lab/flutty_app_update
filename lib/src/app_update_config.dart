@@ -6,6 +6,7 @@ class AppUpdateConfigKeys {
     this.recommendedVersion = 'recommended_version',
     this.updateUrlAndroid = 'update_url_android',
     this.updateUrlIos = 'update_url_ios',
+    this.updateUrlWindows = 'update_url_windows',
   });
 
   /// Floor below which the blocking page shows (e.g. "1.3.0").
@@ -22,6 +23,11 @@ class AppUpdateConfigKeys {
   /// URL opened by the "Update" button on iOS (needs the numeric App Store
   /// id — nothing can be deduced from the bundle id). Empty = no button.
   final String updateUrlIos;
+
+  /// URL opened by the "Update" button on Windows — an MSIX build has no
+  /// deducible store page, so point it at a download page or a store.ms
+  /// link. Empty = no button.
+  final String updateUrlWindows;
 }
 
 /// Source of the update parameters — typically Firebase Remote Config, but
