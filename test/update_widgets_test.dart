@@ -29,7 +29,12 @@ AppUpdateService _recommendedService({
 
 void main() {
   group('ForceUpdateView', () {
-    Widget view({VoidCallback? onUpdate}) => MaterialApp(
+    Widget view({
+      VoidCallback? onUpdate,
+      ForceUpdateButtonBuilder? updateButtonBuilder,
+      ForceUpdateIconBadgeBuilder? iconBadgeBuilder,
+      EdgeInsetsGeometry? contentPadding,
+    }) => MaterialApp(
       home: Scaffold(
         body: ForceUpdateView(
           title: 'Update required',
@@ -37,6 +42,9 @@ void main() {
           updateLabel: 'Update',
           manualHint: 'Update the app from your store.',
           onUpdate: onUpdate,
+          updateButtonBuilder: updateButtonBuilder,
+          iconBadgeBuilder: iconBadgeBuilder,
+          contentPadding: contentPadding,
         ),
       ),
     );
@@ -49,6 +57,67 @@ void main() {
       expect(find.text('Update'), findsOneWidget);
       await tester.tap(find.text('Update'));
       expect(tapped, 1);
+    });
+
+    testWidgets('uses the Material CTA and badge by default', (tester) async {
+      await tester.pumpWidget(view(onUpdate: () {}));
+
+      expect(find.byType(FilledButton), findsOneWidget);
+      expect(find.byIcon(Icons.system_update), findsOneWidget);
+    });
+
+    testWidgets('uses a custom update button instead of the default CTA', (
+      tester,
+    ) async {
+      var tapped = 0;
+      String? receivedLabel;
+      await tester.pumpWidget(
+        view(
+          onUpdate: () => tapped++,
+          updateButtonBuilder: (context, onUpdate, label) {
+            receivedLabel = label;
+            return ElevatedButton(
+              onPressed: onUpdate,
+              child: Text('Custom $label'),
+            );
+          },
+        ),
+      );
+
+      expect(find.byType(FilledButton), findsNothing);
+      expect(find.text('Custom Update'), findsOneWidget);
+      expect(receivedLabel, 'Update');
+      await tester.tap(find.text('Custom Update'));
+      expect(tapped, 1);
+    });
+
+    testWidgets('uses a custom icon badge instead of the default badge', (
+      tester,
+    ) async {
+      IconData? receivedIcon;
+      await tester.pumpWidget(
+        view(
+          onUpdate: () {},
+          iconBadgeBuilder: (context, icon) {
+            receivedIcon = icon;
+            return const SizedBox(key: ValueKey('custom-badge'));
+          },
+        ),
+      );
+
+      expect(find.byKey(const ValueKey('custom-badge')), findsOneWidget);
+      expect(find.byIcon(Icons.system_update), findsNothing);
+      expect(receivedIcon, Icons.system_update);
+    });
+
+    testWidgets('uses custom content padding when provided', (tester) async {
+      const padding = EdgeInsets.symmetric(horizontal: 12, vertical: 20);
+      await tester.pumpWidget(view(onUpdate: () {}, contentPadding: padding));
+
+      final paddingWidget = tester
+          .element(find.byType(Column))
+          .findAncestorWidgetOfExactType<Padding>();
+      expect(paddingWidget?.padding, padding);
     });
 
     testWidgets('without a store action the manual hint replaces the CTA', (
@@ -101,18 +170,28 @@ void main() {
   });
 
   group('UpdateBanner', () {
-    Widget banner(AppUpdateService service, {VoidCallback? onDismissed}) =>
-        MaterialApp(
-          home: Scaffold(
-            body: UpdateBanner(
-              service: service,
-              message: 'A new version is available.',
-              updateLabel: 'Update',
-              dismissTooltip: 'Later',
-              onDismissed: onDismissed,
-            ),
-          ),
-        );
+    Widget banner(
+      AppUpdateService service, {
+      VoidCallback? onDismissed,
+      UpdateBannerActionBuilder? actionBuilder,
+      UpdateBannerDismissBuilder? dismissBuilder,
+      Color? backgroundColor,
+      Color? foregroundColor,
+    }) => MaterialApp(
+      home: Scaffold(
+        body: UpdateBanner(
+          service: service,
+          message: 'A new version is available.',
+          updateLabel: 'Update',
+          dismissTooltip: 'Later',
+          onDismissed: onDismissed,
+          actionBuilder: actionBuilder,
+          dismissBuilder: dismissBuilder,
+          backgroundColor: backgroundColor,
+          foregroundColor: foregroundColor,
+        ),
+      ),
+    );
 
     testWidgets('shows the message and opens the store from the CTA', (
       tester,
@@ -131,6 +210,111 @@ void main() {
       expect(find.text('A new version is available.'), findsOneWidget);
       await tester.tap(find.text('Update'));
       expect(opened, hasLength(1));
+    });
+
+    testWidgets('uses the Material actions by default', (tester) async {
+      final service = _recommendedService(openUrl: (uri) async => true);
+      await service.check();
+      await tester.pumpWidget(banner(service));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(TextButton), findsOneWidget);
+      expect(find.byType(IconButton), findsOneWidget);
+    });
+
+    testWidgets('uses a custom action instead of the default CTA', (
+      tester,
+    ) async {
+      final opened = <Uri>[];
+      String? receivedLabel;
+      final service = _recommendedService(
+        openUrl: (uri) async {
+          opened.add(uri);
+          return true;
+        },
+      );
+      await service.check();
+      await tester.pumpWidget(
+        banner(
+          service,
+          actionBuilder: (context, onUpdate, label) {
+            receivedLabel = label;
+            return ElevatedButton(
+              onPressed: onUpdate,
+              child: Text('Custom $label'),
+            );
+          },
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(TextButton), findsNothing);
+      expect(find.text('Custom Update'), findsOneWidget);
+      expect(receivedLabel, 'Update');
+      await tester.tap(find.text('Custom Update'));
+      expect(opened, hasLength(1));
+    });
+
+    testWidgets('uses a custom dismiss action instead of the default close', (
+      tester,
+    ) async {
+      final store = _MemoryDismissalStore();
+      String? receivedTooltip;
+      final service = _recommendedService(
+        store: store,
+        openUrl: (uri) async => true,
+      );
+      await service.check();
+      await tester.pumpWidget(
+        banner(
+          service,
+          dismissBuilder: (context, onDismiss, tooltip) {
+            receivedTooltip = tooltip;
+            return TextButton(
+              onPressed: onDismiss,
+              child: const Text('Custom close'),
+            );
+          },
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(IconButton), findsNothing);
+      expect(receivedTooltip, 'Later');
+      await tester.tap(find.text('Custom close'));
+      await tester.pumpAndSettle();
+
+      expect(store.stored, '2.0.0');
+      expect(find.text('A new version is available.'), findsNothing);
+    });
+
+    testWidgets('uses custom background and foreground colors', (tester) async {
+      final service = _recommendedService(openUrl: (uri) async => true);
+      await service.check();
+      await tester.pumpWidget(
+        banner(
+          service,
+          backgroundColor: Colors.amber,
+          foregroundColor: Colors.deepPurple,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final rowElement = tester.element(
+        find.descendant(
+          of: find.byType(UpdateBanner),
+          matching: find.byType(Row),
+        ),
+      );
+      final material = rowElement.findAncestorWidgetOfExactType<Material>();
+      final icon = tester.widget<Icon>(
+        find.descendant(
+          of: find.byType(UpdateBanner),
+          matching: find.byIcon(Icons.system_update),
+        ),
+      );
+      expect(material?.color, Colors.amber);
+      expect(icon.color, Colors.deepPurple);
     });
 
     testWidgets('closing dismisses the current version for good', (

@@ -1,3 +1,14 @@
+## 0.3.0
+
+- Add presentation slots to `ForceUpdateView`: `updateButtonBuilder`,
+  `iconBadgeBuilder` and `contentPadding`. Custom design systems can replace
+  the Material CTA or badge while receiving the store callback, label and
+  icon from the view.
+- Add presentation slots to `UpdateBanner`: `actionBuilder`,
+  `dismissBuilder`, `backgroundColor` and `foregroundColor`.
+- Fully backwards compatible: every new parameter is optional and the
+  default rendering keeps the existing Material widgets, spacing and colors.
+
 ## 0.2.0
 
 - Add `AppStorePlatform.windows` and the `update_url_windows` remote

@@ -1,6 +1,27 @@
 import 'package:flutty_app_update/src/app_update_service.dart';
 import 'package:flutty_app_update/src/material.dart';
 
+/// Builds the update action of an [UpdateBanner].
+///
+/// The [onUpdate] callback and [label] are the values the banner would have
+/// passed to its default Material button, so a custom design system does not
+/// need to reach back to the update service.
+typedef UpdateBannerActionBuilder = Widget Function(
+  BuildContext context,
+  VoidCallback onUpdate,
+  String label,
+);
+
+/// Builds the dismiss action of an [UpdateBanner].
+///
+/// The [onDismiss] callback records the dismissal before hiding the banner;
+/// [tooltip] is the configured dismiss tooltip, if any.
+typedef UpdateBannerDismissBuilder = Widget Function(
+  BuildContext context,
+  VoidCallback onDismiss,
+  String? tooltip,
+);
+
 /// Dismissible banner shown while [UpdateStatus.recommended] applies.
 ///
 /// Reads the dismissal state from the [service] on first build and
@@ -15,6 +36,10 @@ class UpdateBanner extends StatefulWidget {
     this.updateLabel,
     this.dismissTooltip,
     this.onDismissed,
+    this.actionBuilder,
+    this.dismissBuilder,
+    this.backgroundColor,
+    this.foregroundColor,
     super.key,
   });
 
@@ -33,6 +58,24 @@ class UpdateBanner extends StatefulWidget {
 
   /// Called after the user dismissed the banner (e.g. extra reporting).
   final VoidCallback? onDismissed;
+
+  /// Replaces the default Material update action when provided.
+  ///
+  /// The builder receives the store callback and the action label. `null`
+  /// keeps the default [TextButton].
+  final UpdateBannerActionBuilder? actionBuilder;
+
+  /// Replaces the default Material close button when provided.
+  ///
+  /// The builder receives the dismissal callback and the configured tooltip.
+  /// `null` keeps the default [IconButton].
+  final UpdateBannerDismissBuilder? dismissBuilder;
+
+  /// Banner background — defaults to `colorScheme.secondaryContainer`.
+  final Color? backgroundColor;
+
+  /// Banner foreground — defaults to `colorScheme.onSecondaryContainer`.
+  final Color? foregroundColor;
 
   @override
   State<UpdateBanner> createState() => _UpdateBannerState();
@@ -68,36 +111,45 @@ class _UpdateBannerState extends State<UpdateBanner> {
   Widget build(BuildContext context) {
     if (_visible != true) return const SizedBox.shrink();
     final colors = Theme.of(context).colorScheme;
+    final backgroundColor = widget.backgroundColor ?? colors.secondaryContainer;
+    final foregroundColor =
+        widget.foregroundColor ?? colors.onSecondaryContainer;
     return Material(
-      color: colors.secondaryContainer,
+      color: backgroundColor,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         child: Row(
           children: [
-            Icon(
-              Icons.system_update,
-              size: 20,
-              color: colors.onSecondaryContainer,
-            ),
+            Icon(Icons.system_update, size: 20, color: foregroundColor),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
                 widget.message,
                 style: Theme.of(context).textTheme.bodyMedium
-                    ?.copyWith(color: colors.onSecondaryContainer),
+                    ?.copyWith(color: foregroundColor),
               ),
             ),
             if (widget.service.canOpenStore && widget.updateLabel != null)
-              TextButton(
-                onPressed: widget.service.openStore,
-                child: Text(widget.updateLabel!),
-              ),
-            IconButton(
-              icon: const Icon(Icons.close, size: 20),
-              tooltip: widget.dismissTooltip,
-              color: colors.onSecondaryContainer,
-              onPressed: _dismiss,
-            ),
+              widget.actionBuilder?.call(
+                    context,
+                    widget.service.openStore,
+                    widget.updateLabel!,
+                  ) ??
+                  TextButton(
+                    onPressed: widget.service.openStore,
+                    child: Text(widget.updateLabel!),
+                  ),
+            widget.dismissBuilder?.call(
+                  context,
+                  _dismiss,
+                  widget.dismissTooltip,
+                ) ??
+                IconButton(
+                  icon: const Icon(Icons.close, size: 20),
+                  tooltip: widget.dismissTooltip,
+                  color: foregroundColor,
+                  onPressed: _dismiss,
+                ),
           ],
         ),
       ),

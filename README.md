@@ -104,6 +104,61 @@ Closing it records the *current* recommended version in
 a different version gets recommended. Dismissal is device-local by
 design; inject another `UpdateDismissalStore` to change that.
 
+## Custom presentation
+
+The defaults remain the Material rendering above. An app with its own
+design system can replace only the slots it needs — the package stays
+unaware of that design system, and every builder receives the callback,
+label or icon it needs (no need to reach back to the service):
+
+```dart
+ForceUpdateView(
+  title: 'Update required',
+  message: 'This version is no longer supported.',
+  updateLabel: 'Update',
+  manualHint: 'Update the app from your store.',
+  onUpdate: service.canOpenStore ? service.openStore : null,
+  // ClayButton and ClayIconBadge are app widgets — the package never
+  // imports them.
+  updateButtonBuilder: (context, onUpdate, label) => ClayButton(
+    onPressed: onUpdate,
+    child: Text(label),
+  ),
+  iconBadgeBuilder: (context, icon) => ClayIconBadge(icon: icon),
+  contentPadding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+);
+```
+
+The custom CTA is used under the same condition as the default one:
+`onUpdate` and `updateLabel` are both non-null. Omitting every builder
+keeps the default `FilledButton` and circular Material badge unchanged.
+
+The banner exposes the same kind of slots, plus colors for its surface:
+
+```dart
+UpdateBanner(
+  service: service,
+  message: 'A new version is available.',
+  updateLabel: 'Update',
+  dismissTooltip: 'Later',
+  backgroundColor: ClayColors.surface,
+  foregroundColor: ClayColors.onSurface,
+  actionBuilder: (context, onUpdate, label) => ClayTextButton(
+    onPressed: onUpdate,
+    child: Text(label),
+  ),
+  dismissBuilder: (context, onDismiss, tooltip) => ClayIconButton(
+    icon: const Icon(Icons.close),
+    tooltip: tooltip,
+    onPressed: onDismiss,
+  ),
+);
+```
+
+`actionBuilder` is used only when the store can be opened and
+`updateLabel` is present. `dismissBuilder` must wire its affordance to
+the received `onDismiss` callback so the dismissal is still recorded.
+
 ## Analytics
 
 Implement `AppUpdateAnalytics` to receive `updatePromptShown(status)`,
